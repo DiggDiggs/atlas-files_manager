@@ -1,6 +1,6 @@
 # File Management System 🗄️✨
 
-Welcome to our File Management System project at Holberton School! Here, we'll be putting into practice the backend tools we've been mastering this trimester. Our journey will take us through authentication, NodeJS, MongoDB, Redis, pagination, and background processing. Our ultimate goal? Crafting a sleek platform for uploading and viewing files – a true file manager.
+Welcome to our File Management System project at Atlas! Here, we'll be putting into practice the backend tools we've been mastering this trimester. Our journey will take us through authentication, NodeJS, MongoDB, Redis, pagination, and background processing. Our ultimate goal? Crafting a sleek platform for uploading and viewing files – a true file manager.
 
 ### Features Overview:
 - **User Authentication:** Secure access via token authentication.
