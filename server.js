@@ -3,7 +3,7 @@ const express = require('express');
 
 const app = express();
 // Load routes
-const routes = require('./routes/index.js/index');
+const routes = require('./routes/index');
 
 // Parse JSON bodies (as sent by API clients)
 app.use(express.json());
