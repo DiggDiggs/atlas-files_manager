@@ -1,19 +1,21 @@
-// All endpoints for the API are defined here
-const express = require('express');
+// Setting up routes
+import { Router } from 'express';
+import AppController from '../controllers/AppController';
+import UsersController from '../controllers/UsersController';
+import AuthController from '../controllers/AuthController';
 
-// controllers
-const AppController = require('../controllers/AppController');
-const AuthController = require('../controllers/AuthController');
-const UsersController = require('../controllers/UsersController');
-const router = express.Router();
 
-// get routes
+const router = Router();
+
+// Get Routes
 router.get('/status', AppController.getStatus);
 router.get('/stats', AppController.getStats);
 router.get('/connect', AuthController.getConnect);
 router.get('/disconnect', AuthController.getDisconnect);
 router.get('/users/me', UsersController.getMe);
 
-// post routes
+
+// Post Routes
 router.post('/users', UsersController.postNew);
+
 module.exports = router;
