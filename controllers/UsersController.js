@@ -1,6 +1,7 @@
 // User Controllers for the application
-import redisClient from '../utils/redis';
 import crypto from 'crypto';
+import { ObjectId } from 'mongodb';
+import redisClient from '../utils/redis';
 import dbClient from '../utils/db';
 // import crypto for password hashing
 
@@ -30,68 +31,36 @@ class UsersController {
       email,
       password: hashedPassword,
     });
-    
-        // Return the new user's email and id
-        return res.status(201).json({
-          id: newUser.insertedId,
-          email
-        });
+
+    // Return the new user's email and id
+    return res.status(201).json({
+      id: newUser.insertedId,
+      email,
+    });
   }
-    
+
   // Retrieve the user base on the token
   static async getMe(req, res) {
     const token = req.headers['x-token'];
     if (!token) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-
-    try {
-      // Get user ID string associated w/ token from Redis
-      const userIdString = await RedisClient.get(`auth_${token}`);
-      if (!userIdString) {
-        return res.status(401).json({ error: 'Unauthorized' });
-      }
-
-      // Convert user ID string to MongoDB's ObjectID
-      const userId = new ObjectID(userIdString);
-      // Find user by ID from db
-      const user = await dbClient.users.findOne({ _id: userId });
-      if (!user) {
-        return res.status(401).json({ error: 'Unauthorized' });
-      }
-
-      // Return users ID and email, converting it from ObjectID to string for response
-      return res.status(200).json({ id: user._id.toString(), email: user.email });
-    } catch (error) {
-      console.error(error);
-      return res.status(500).json({ error: 'Internal Server Error' });
-    }
-  }
-
-  static async getMe(req, res) {
-    // Extract token from request headers
-    const token = req.headers['x-token'];
-    console.log("Token for getMe is:", token);
-
-    // Check if token is present
-    if (!token) {
-      console.log("Token not valid or undefined");
+      console.log('Token not valid or undefined');
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
     try {
       // Retrieve user from Redis cache based on token
       const userId = await redisClient.get(`auth_${token}`);
-      console.log("userId from redisClient is:", userId);
+      console.log('userId from redisClient is:', userId);
       if (!userId) {
-        console.log("No userId or invalid");
+        console.log('No userId or invalid');
         return res.status(401).json({ error: 'Unauthorized' });
       }
 
       // Retrieve user details from the database
-      const user = await dbClient.db.collection('users').findOne({ _id: userId });
+      const user = await dbClient.db.collection('users').findOne({ _id: new ObjectId(userId) });
 
       if (!user) {
+        console.log('User not found in the database');
         return res.status(401).json({ error: 'Unauthorized' });
       }
 
