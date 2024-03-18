@@ -19,8 +19,7 @@ class UsersController {
 
     try {
       await dbClient.connect();
-      db = dbClient.db('your_database_name');
-      let userCollection = dbClient.collection('users');
+      const userCollection = dbClient.collection('users');
       const existingUser = await userCollection.findOne({ email });
 
       // Check if the email already exists
@@ -48,6 +47,7 @@ class UsersController {
     } finally {
       await dbClient.close();
     }
+    return false;
   }
 
   // Retrieve the user base on the token
