@@ -19,12 +19,13 @@ class DBClient {
     } catch (error) {
       console.error('Error connecting to MongoDB:', error);
       this.isConnected = false;
+      return this.isConnected;
     }
   }
 
   async isAlive() {
     try {
-      await this.client.db("admin").command({ ping: 1 });
+      await this.client.db('admin').command({ ping: 1 });
       return this.isConnected;
     } catch (error) {
       // if (error.message.includes('not authorized on admin to execute command { ping: 1 }')) {

@@ -18,10 +18,10 @@ class UsersController {
     }
 
     try {
-      await client.connect();
-      db = client.db('your_database_name');
-      const userCollection = db.collection('users');
-      const existingUser = await dbClient.userCollection.findOne({ email });
+      await dbClient.connect();
+      db = dbClient.db('your_database_name');
+      let userCollection = dbClient.collection('users');
+      const existingUser = await userCollection.findOne({ email });
 
       // Check if the email already exists
       if (existingUser) {
@@ -29,11 +29,11 @@ class UsersController {
       }
 
       // Hash the password with SHA1
-      const hashedPassword = crypto.createHash('sha1').update(password).digest('hex');
+      const hashedPassword = crypto.createHash('SHA1').update(password).digest('hex');
 
       // Create the new user
-      const newUser = await dbClient.userCollection.insertOne({
-        email: newUser.email,
+      const newUser = await userCollection.insertOne({
+        email,
         password: hashedPassword,
       });
 
@@ -46,8 +46,8 @@ class UsersController {
       console.error(error);
       res.status(500).send('Server error');
     } finally {
-        await client.close();
-   }
+      await dbClient.close();
+    }
   }
 
   // Retrieve the user base on the token
