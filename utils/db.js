@@ -9,6 +9,7 @@ const url = `mongodb://${host}:${port}/${database}`;
 class DBClient {
   constructor() {
     this.client = new MongoClient(url, { useNewUrlParser: true, useUnifiedTopology: true });
+    this.client.connect();
   }
 
   async connect() {
@@ -16,25 +17,16 @@ class DBClient {
       await this.client.connect();
       this.isConnected = true;
       console.log('Connected to MongoDB');
-      return this.isConnected;
+      return true;
     } catch (error) {
       console.error('Error connecting to MongoDB:', error);
       this.isConnected = false;
-      return this.isConnected;
+      return false;
     }
   }
 
   async isAlive() {
-    try {
-      await this.client.db('admin').command({ ping: 1 });
-      return this.isConnected;
-    } catch (error) {
-      // if (error.message.includes('not authorized on admin to execute command { ping: 1 }')) {
-      //   return false;
-      // }
-      console.error('Error checking MongoDB connection:', error);
-      return this.isConnected;
-    }
+    return this.client.isConnected();
   }
 
   async nbUsers() {

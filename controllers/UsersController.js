@@ -1,8 +1,8 @@
 // User Controllers for the application
-import crypto from 'crypto';
+const sha1 = require('sha1');
 import { ObjectId } from 'mongodb';
 import redisClient from '../utils/redis';
-import dbClient from '../utils/db';
+const dbClient = require('../utils/db');
 // import crypto for password hashing
 
 class UsersController {
@@ -28,13 +28,12 @@ class UsersController {
       }
 
       // Hash the password with SHA1
-      const hashedPassword = crypto.createHash('SHA1').update(password).digest('hex');
-
+      const hashedPassword = sha1(password);
       // Create the new user
-      const newUser = await userCollection.insertOne({
+      const newUser = {
         email,
         password: hashedPassword,
-      });
+      };
 
       // Return the new user's email and id
       return res.status(201).json({
@@ -42,12 +41,9 @@ class UsersController {
         email: newUser.email,
       });
     } catch (error) {
-      console.error(error);
-      res.status(500).send('Server error');
-    } finally {
-      await dbClient.close();
+      console.error('Error creating user: ', error);
+      return res.status(500).json({ error: 'Internal service error' });
     }
-    return false;
   }
 
   // Retrieve the user base on the token
@@ -84,4 +80,4 @@ class UsersController {
   }
 }
 
-export default UsersController;
+module.exports = UsersController;
