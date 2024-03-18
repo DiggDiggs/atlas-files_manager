@@ -17,26 +17,37 @@ class UsersController {
       return res.status(400).json({ error: 'Missing password' });
     }
 
-    // Check if the email already exists
-    const existingUser = await dbClient.db.collection('users').findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ error: 'Already exist' });
-    }
+    try {
+      await client.connect();
+      db = client.db('your_database_name');
+      const userCollection = db.collection('users');
+      const existingUser = await dbClient.userCollection.findOne({ email });
 
-    // Hash the password with SHA1
-    const hashedPassword = crypto.createHash('sha1').update(password).digest('hex');
+      // Check if the email already exists
+      if (existingUser) {
+        return res.status(400).json({ error: 'Already exist' });
+      }
 
-    // Create the new user
-    const newUser = await dbClient.db.collection('users').insertOne({
-      email,
-      password: hashedPassword,
-    });
+      // Hash the password with SHA1
+      const hashedPassword = crypto.createHash('sha1').update(password).digest('hex');
 
-    // Return the new user's email and id
-    return res.status(201).json({
-      id: newUser.insertedId,
-      email,
-    });
+      // Create the new user
+      const newUser = await dbClient.userCollection.insertOne({
+        email: newUser.email,
+        password: hashedPassword,
+      });
+
+      // Return the new user's email and id
+      return res.status(201).json({
+        id: newUser.insertedId,
+        email: newUser.email,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).send('Server error');
+    } finally {
+        await client.close();
+   }
   }
 
   // Retrieve the user base on the token

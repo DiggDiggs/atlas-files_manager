@@ -14,22 +14,24 @@ class DBClient {
   async connect() {
     try {
       await this.client.connect();
+      this.isConnected = true;
       console.log('Connected to MongoDB');
     } catch (error) {
       console.error('Error connecting to MongoDB:', error);
+      this.isConnected = false;
     }
   }
 
   async isAlive() {
     try {
-      await this.client.db().command({ ping: 1 });
-      return true;
+      await this.client.db("admin").command({ ping: 1 });
+      return this.isConnected;
     } catch (error) {
       // if (error.message.includes('not authorized on admin to execute command { ping: 1 }')) {
       //   return false;
       // }
       console.error('Error checking MongoDB connection:', error);
-      return false;
+      return this.isConnected;
     }
   }
 

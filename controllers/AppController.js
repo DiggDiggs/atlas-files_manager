@@ -3,9 +3,9 @@ const redisClient = require('../utils/redis');
 const DBClient = require('../utils/db');
 
 class AppController {
-  static getStatus(req, res) {
-    const redisAlive = redisClient.isAlive();
-    const dbAlive = DBClient.isAlive();
+  static async getStatus(req, res) {
+    const redisAlive = await redisClient.isAlive();
+    const dbAlive = await DBClient.isAlive();
     res.status(200).json({ redis: redisAlive, db: dbAlive });
   }
 
