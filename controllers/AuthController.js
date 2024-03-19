@@ -37,7 +37,7 @@ const AuthController = {
 
       // Generating a token
       const token = uuidv4();
-      await redisClient.set(`auth_${token}`, user._id.toString(), 24 * 60 * 60); // set token valid for 24 hours
+      await redisClient.set(`auth_${token}`, user._id.toString(), 24 * 60 * 60); // set token 24 hours
 
       return res.status(200).json({ token });
     } catch (error) {
