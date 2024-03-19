@@ -1,7 +1,7 @@
 // User Controllers for the application
 const sha1 = require('sha1');
-import { ObjectId } from 'mongodb';
-import redisClient from '../utils/redis';
+const { ObjectId } = ('mongodb');
+const redisClient = require('../utils/redis');
 const dbClient = require('../utils/db');
 // import crypto for password hashing
 
@@ -19,8 +19,7 @@ class UsersController {
 
     try {
       await dbClient.connect();
-      const userCollection = dbClient.collection('users');
-      const existingUser = await userCollection.findOne({ email });
+      const existingUser = await dbClient.findUser({ email });
 
       // Check if the email already exists
       if (existingUser) {
@@ -51,7 +50,7 @@ class UsersController {
     const token = req.headers['x-token'];
     if (!token) {
       console.log('Token not valid or undefined');
-      return res.status(401).json({ error: 'Unauthorized' });
+      return res.status(401).send({ error: 'Unauthorized' });
     }
 
     try {
@@ -68,7 +67,7 @@ class UsersController {
 
       if (!user) {
         console.log('User not found in the database');
-        return res.status(401).json({ error: 'Unauthorized' });
+        return res.status(401).send({ error: 'Unauthorized' });
       }
 
       // Return user email and id
