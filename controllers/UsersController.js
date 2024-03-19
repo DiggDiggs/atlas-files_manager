@@ -19,32 +19,33 @@ class UsersController {
 
     try {
       await dbClient.connect();
-      const userCollection = dbClient.collection('users');
-      const existingUser = await userCollection.findOne({ email });
+      const existingUser = await dbClient.findUser({ email });
 
-    // Check if the email already exists
-    const existingUser = await dbClient.db.collection('users').findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ error: 'Already exist' });
+      // Check if the email already exists
+      if (existingUser) {
+        return res.status(400).json({ error: 'Already exist' });
+      }
+
+      // Hash the password with SHA1
+      const hashedPassword = sha1(password);
+      // Create the new user
+      const newUser = {
+        email,
+        password: hashedPassword,
+      };
+
+      // Return the new user's email and id
+      return res.status(201).json({
+        id: newUser.insertedId,
+        email: newUser.email,
+      });
+    } catch (error) {
+      console.error('Error creating user: ', error);
+      return res.status(500).json({ error: 'Internal service error' });
     }
-
-    // Hash the password with SHA1
-    const hashedPassword = crypto.createHash('sha1').update(password).digest('hex');
-
-    // Create the new user
-    const newUser = await dbClient.db.collection('users').insertOne({
-      email,
-      password: hashedPassword,
-    });
-
-    // Return the new user's email and id
-    return res.status(201).json({
-      id: newUser.insertedId,
-      email,
-    });
   }
 
-  // Retrieve user the token
+  // Retrieve the user base on the token
   static async getMe(req, res) {
     const token = req.headers['x-token'];
     if (!token) {
@@ -78,4 +79,4 @@ class UsersController {
   }
 }
 
-export default UsersController;
+module.exports = UsersController;
