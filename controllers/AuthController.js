@@ -1,8 +1,8 @@
 // Controller for authentication
-import sha1 from 'sha1';
-import { v4 as uuidv4 } from 'uuid'; // generate unique id
-import dbClient from '../utils/db';
-import redisClient from '../utils/redis';
+const sha1 = require('sha1');
+const { v4: uuidv4 } = require('uuid'); // generate unique id
+// import dbClient from '../utils/db';
+const redisClient = require('../utils/redis');
 
 // AuthController class
 const AuthController = {
@@ -12,7 +12,7 @@ const AuthController = {
 
     // Making sure the header is there
     if (!authHeader) {
-      return res.status(401).json({ error: 'Unauthorized' });
+      return res.status(401).send({ error: 'Unauthorized' });
     }
 
     // Extracting the Base64 encoded credentials from the Authorization header
@@ -21,29 +21,20 @@ const AuthController = {
     const [email, password] = credentials.split(':');
 
     if (!email || !password) {
+      return res.status(401).send({ error: 'Unauthorized' });
+    }
+
+    if (!user || user.password !== sha1(password)) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
+    // Generate token
+    const token = uuidv4();
+    const key = `auth_${token}`;
 
-    // Hashing the password
-    const hashedPassword = sha1(password);
+    // Store user ID in Redis for 24 hours
+    await redisClient.set(key, user._id, 'EX', 86400);
 
-    try {
-      // console.log('about to get the user');
-      const user = await dbClient.findUser({ email, password: hashedPassword });
-      // console.log('the user is:', user);
-      if (!user) {
-        return res.status(401).json({ error: 'Unauthorized' });
-      }
-
-      // Generating a token
-      const token = uuidv4();
-      await redisClient.set(`auth_${token}`, user._id.toString(), 24 * 60 * 60); // set token 24 hours
-
-      return res.status(200).json({ token });
-    } catch (error) {
-      console.log(error);
-      return res.status(500).json({ error: 'Internal server error' });
-    }
+    res.status(200).json({ token });
   },
 
   // Getting disconnect
@@ -52,17 +43,13 @@ const AuthController = {
     if (!token) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
-
-    try {
-      const reply = await redisClient.del(`auth_${token}`);
-      if (reply === 0) {
-        return res.status(401).json({ error: 'Unauthorized' });
-      }
-      return res.status(204).send(); // Adjusted with return
-    } catch (error) {
-      console.error(error);
-      return res.status(500).json({ error: 'Internal server error' }); // Adjusted with return
-    }
+    const key = `auth_`;
+    const userId = await redisClient.get(key);
+    if (!userId) return res.status(401).send('Unauthorized');
+    
+    await redisClient.del(key);
+    
+    res.status(204).send();
   },
 };
 

@@ -1,10 +1,10 @@
 // Setting up routes
 const express = require('express');
+const AuthController = require('../controllers/AuthController');
+const AppController = require('../controllers/AppController');
+const UsersController = require('../controllers/UsersController');
+
 const router = express.Router();
-import AppController from '../controllers/AppController';
-import UsersController from '../controllers/UsersController';
-import AuthController from '../controllers/AuthController';
-import FilesController from('../controllers/FilesController');
 
 // Get Routes
 router.get('/status', AppController.getStatus);

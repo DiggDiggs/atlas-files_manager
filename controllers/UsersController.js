@@ -1,9 +1,9 @@
 // User Controllers for the application
-import crypto from 'crypto';
-import { ObjectId } from 'mongodb';
-import redisClient from '../utils/redis';
-import dbClient from '../utils/db';
-// password hashing
+const sha1 = require('sha1');
+const { ObjectId } = ('mongodb');
+const redisClient = require('../utils/redis');
+const dbClient = require('../utils/db');
+// import crypto for password hashing
 
 class UsersController {
   static async postNew(req, res) {
@@ -17,34 +17,40 @@ class UsersController {
       return res.status(400).json({ error: 'Missing password' });
     }
 
-    // Check if the email already exists
-    const existingUser = await dbClient.db.collection('users').findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ error: 'Already exist' });
+    try {
+      await dbClient.connect();
+      const existingUser = await dbClient.findUser({ email });
+
+      // Check if the email already exists
+      if (existingUser) {
+        return res.status(400).json({ error: 'Already exist' });
+      }
+
+      // Hash the password with SHA1
+      const hashedPassword = sha1(password);
+      // Create the new user
+      const newUser = {
+        email,
+        password: hashedPassword,
+      };
+
+      // Return the new user's email and id
+      return res.status(201).json({
+        id: newUser.insertedId,
+        email: newUser.email,
+      });
+    } catch (error) {
+      console.error('Error creating user: ', error);
+      return res.status(500).json({ error: 'Internal service error' });
     }
-
-    // Hash the password with SHA1
-    const hashedPassword = crypto.createHash('sha1').update(password).digest('hex');
-
-    // Create the new user
-    const newUser = await dbClient.db.collection('users').insertOne({
-      email,
-      password: hashedPassword,
-    });
-
-    // Return the new user's email and id
-    return res.status(201).json({
-      id: newUser.insertedId,
-      email,
-    });
   }
 
-  // Retrieve user the token
+  // Retrieve the user base on the token
   static async getMe(req, res) {
     const token = req.headers['x-token'];
     if (!token) {
       console.log('Token not valid or undefined');
-      return res.status(401).json({ error: 'Unauthorized' });
+      return res.status(401).send({ error: 'Unauthorized' });
     }
 
     try {
@@ -61,7 +67,7 @@ class UsersController {
 
       if (!user) {
         console.log('User not found in the database');
-        return res.status(401).json({ error: 'Unauthorized' });
+        return res.status(401).send({ error: 'Unauthorized' });
       }
 
       // Return user email and id
@@ -73,4 +79,4 @@ class UsersController {
   }
 }
 
-export default UsersController;
+module.exports = UsersController;
