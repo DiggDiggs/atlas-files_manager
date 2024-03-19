@@ -1,56 +1,63 @@
-const { MongoClient } = require('mongodb');
+import { MongoClient } from 'mongodb';
 
+// MongoDB connection
 const host = process.env.DB_HOST || 'localhost';
-const port = process.env.DB_PORT || 27017;
+const port = process.env.DB_PORT || '27017';
 const database = process.env.DB_DATABASE || 'files_manager';
-
-const url = `mongodb://${host}:${port}/${database}`;
 
 class DBClient {
   constructor() {
-    this.client = new MongoClient(url, { useNewUrlParser: true, useUnifiedTopology: true });
-    this.client.connect();
-  }
-
-  async connect() {
-    try {
-      await this.client.connect();
-      this.isConnected = true;
+    // MongoDB string
+    this.dbUrl = `mongodb://${host}:${port}`;
+    this.dbName = database;
+    this.client = new MongoClient(this.dbUrl, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    // Connecting to MongoDB
+    this.client.connect((err) => {
+      if (err) {
+        console.error('Failed to connect to MongoDB', err);
+        return;
+      }
       console.log('Connected to MongoDB');
-      return true;
-    } catch (error) {
-      console.error('Error connecting to MongoDB:', error);
-      this.isConnected = false;
-      return false;
-    }
+      this.db = this.client.db(this.dbName);
+    });
   }
 
-  async isAlive() {
-    return this.client.isConnected();
+  // Check if the connection is alive
+  isAlive() {
+    return !!this.client && !!this.client.topology && this.client.topology.isConnected();
   }
 
+  // Getting number of users
   async nbUsers() {
-    try {
-      const collection = this.client.db().collection('users');
-      return await collection.countDocuments();
-    } catch (error) {
-      console.error('Error counting users:', error);
-      return 0;
+    if (this.db) {
+      return this.db.collection('users').countDocuments();
     }
+    throw new Error('DB is not initialized.');
   }
 
+  // Get the number of files
   async nbFiles() {
+    if (this.db) {
+      return this.db.collection('files').countDocuments();
+    }
+    throw new Error('DB is not initialized.');
+  }
+
+  // Find the user and return it
+  async findUser(filter) {
     try {
-      const collection = this.client.db().collection('files');
-      return await collection.countDocuments();
+      const user = await this.db.collection('users').findOne(filter);
+      return user;
     } catch (error) {
-      console.error('Error counting files:', error);
-      return 0;
+      console.error('Error finding user:', error);
+      throw new Error('Failed to find user in database.');
     }
   }
 }
 
+// Export an instance of DBClient
 const dbClient = new DBClient();
-dbClient.connect(); // Connect to MongoDB when the application starts
-
-module.exports = dbClient;
+export default dbClient;
