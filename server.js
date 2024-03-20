@@ -1,20 +1,14 @@
-// Task 2. First API
-const express = require('express');
+import express from 'express';
+import controllerRouting from './routes/index';
 
-const app = express();
-// Load routes
-const routes = require('./routes/index');
-
-// Parse JSON bodies (as sent by API clients)
-app.use(express.json());
-
-// Middleware to use the routes
-app.use(routes);
-
-// Listen on port from .env
 const PORT = process.env.PORT || 5000;
+const app = express();
+
+app.use(express.json());
+controllerRouting(app);
+
 app.listen(PORT, () => {
-  console.log('Server running on port 5000');
+  console.log(`Server running on port ${PORT}`);
 });
 
-module.exports = app;
+export default app;

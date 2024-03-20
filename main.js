@@ -1,4 +1,4 @@
-const redisClient = require('./redis');
+import redisClient from './utils/redis';
 
 (async () => {
   console.log(redisClient.isAlive());
@@ -8,5 +8,5 @@ const redisClient = require('./redis');
 
   setTimeout(async () => {
     console.log(await redisClient.get('myKey'));
-  }, 1000*10)
+  }, 1000 * 10);
 })();
